@@ -381,6 +381,16 @@
                 <span class="badge">15 questions</span>
                 <span class="badge badge-adaptive">Adaptatif</span>
             </div>
+            <div style="display:flex; gap:10px; margin-bottom:18px;">
+                <div style="flex:1;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--gray-700,#334155); margin-bottom:6px;">Prenom</label>
+                    <input type="text" id="student-name" placeholder="Ton prenom" style="width:100%; padding:10px 14px; border:2px solid #E2E8F0; border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; background:#fff; transition:border-color 0.2s;" onfocus="this.style.borderColor='#F58220'" onblur="this.style.borderColor='#E2E8F0'">
+                </div>
+                <div style="flex:0 0 90px;">
+                    <label style="display:block; font-size:13px; font-weight:600; color:var(--gray-700,#334155); margin-bottom:6px;">Age</label>
+                    <input type="number" id="student-age" placeholder="17" min="10" max="30" style="width:100%; padding:10px 14px; border:2px solid #E2E8F0; border-radius:10px; font-size:14px; font-family:'Inter',sans-serif; background:#fff; transition:border-color 0.2s;" onfocus="this.style.borderColor='#F58220'" onblur="this.style.borderColor='#E2E8F0'">
+                </div>
+            </div>
             <h2 style="font-size:16px; margin-bottom:16px;">Choisis ta serie</h2>
             <div class="series-grid">
                 <div class="series-card" data-series="A" onclick="selectSeries('A')">
@@ -1552,6 +1562,8 @@ class AdaptiveEngine {
 // ============================================================
 let state = {
     selectedSeries: null,
+    studentName: '',
+    studentAge: '',
     engine: null,
     currentQuestion: null,
     questionNumber: 0,
@@ -1563,6 +1575,9 @@ let state = {
     timeLeft: 600,
     startTime: null
 };
+
+// Google Sheets webhook URL — replace with your own Apps Script URL
+const SHEET_WEBHOOK_URL = '';
 
 // ============================================================
 // UI LOGIC
@@ -1576,6 +1591,8 @@ function selectSeries(series) {
 
 function startQuiz() {
     if (!state.selectedSeries) return;
+    state.studentName = document.getElementById('student-name').value.trim() || 'Anonyme';
+    state.studentAge = document.getElementById('student-age').value.trim() || '-';
     state.engine = new AdaptiveEngine(state.selectedSeries);
     state.questionNumber = 0;
     state.timeLeft = 600;
@@ -1832,6 +1849,54 @@ function finishQuiz() {
     const results = state.engine.getResults();
     renderResults(results, elapsed);
     showScreen('screen-results');
+    saveResultsToSheet(results, elapsed);
+}
+
+function saveResultsToSheet(r, elapsed) {
+    if (!SHEET_WEBHOOK_URL) return;
+    const min = Math.floor(elapsed / 60);
+    const sec = elapsed % 60;
+
+    // Build subject scores
+    const subjectScores = {};
+    for (const [subject, data] of Object.entries(r.subjectData)) {
+        subjectScores[subject] = `${data.correct}/${data.total} (${Math.round((data.correct/data.total)*100)}%)`;
+    }
+
+    // Lacunes list
+    const lacunes = r.lacunes.map(l => `${l.subject} - ${l.topic}`).join(', ') || 'Aucune';
+    const forces = r.forces.map(f => `${f.subject} - ${f.topic}`).join(', ') || 'Aucune';
+
+    // Level
+    const ns = r.normalizedScore;
+    let level;
+    if (ns >= 75) level = "Excellent";
+    else if (ns >= 55) level = "Bon niveau";
+    else if (ns >= 35) level = "Niveau moyen";
+    else level = "Niveau insuffisant";
+
+    const payload = {
+        timestamp: new Date().toISOString(),
+        prenom: state.studentName,
+        age: state.studentAge,
+        serie: state.selectedSeries,
+        score: `${r.totalCorrect}/${r.total}`,
+        pourcentage: r.percentage,
+        scoreNormalise: r.normalizedScore,
+        niveau: level,
+        temps: `${min}min ${sec}s`,
+        matieres: subjectScores,
+        lacunes: lacunes,
+        forces: forces,
+        difficulteMax: r.maxDifficultyReached
+    };
+
+    fetch(SHEET_WEBHOOK_URL, {
+        method: 'POST',
+        mode: 'no-cors',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify(payload)
+    }).catch(() => {});
 }
 
 function renderResults(r, elapsed) {
@@ -1876,7 +1941,7 @@ function renderResults(r, elapsed) {
             </div>
         </div>
         <div style="text-align:center; font-size:13px; color:var(--gray-500);">
-            Serie ${state.selectedSeries} &bull; Temps : ${min}min ${sec}s &bull; Difficulte max atteinte : ${maxDiffLabel}
+            ${state.studentName !== 'Anonyme' ? '<strong>' + state.studentName + '</strong>' + (state.studentAge !== '-' ? ' (' + state.studentAge + ' ans)' : '') + ' &bull; ' : ''}Serie ${state.selectedSeries} &bull; Temps : ${min}min ${sec}s &bull; Difficulte max atteinte : ${maxDiffLabel}
         </div>
         <div class="adaptive-summary">
             <h4>Diagnostic adaptatif</h4>
@@ -2029,10 +2094,12 @@ function showScreen(id) {
 
 function restart() {
     clearInterval(state.timerInterval);
-    state = { selectedSeries: null, engine: null, currentQuestion: null, questionNumber: 0, answered: false, phase: 'rate', selfRating: 5, selfRatings: [], timerInterval: null, timeLeft: 600, startTime: null };
+    state = { selectedSeries: null, studentName: '', studentAge: '', engine: null, currentQuestion: null, questionNumber: 0, answered: false, phase: 'rate', selfRating: 5, selfRatings: [], timerInterval: null, timeLeft: 600, startTime: null };
     selectedOption = null;
     document.querySelectorAll('.series-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('btn-start').disabled = true;
+    document.getElementById('student-name').value = '';
+    document.getElementById('student-age').value = '';
     showScreen('screen-welcome');
 }
 </script>
