@@ -415,8 +415,8 @@
         <div class="progress-bar-container">
             <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
         </div>
-        <div class="self-rate-card" id="self-rate-card" style="display:none;"></div>
-        <div class="question-card" id="question-card"></div>
+        <div class="self-rate-card" id="self-rate-card" style="display:none"></div>
+        <div class="question-card" id="question-card" style="display:none"></div>
         <div class="quiz-nav">
             <button class="btn-nav btn-next" id="btn-next" onclick="handleNext()" disabled>Valider</button>
         </div>
@@ -1294,15 +1294,17 @@ function showSelfRating() {
     srCard.style.display = 'block';
     document.getElementById('question-card').style.display = 'none';
 
+    const initColor = desc.color;
     srCard.innerHTML = `
         <div class="sr-icon">\uD83C\uDFAF</div>
         <div class="sr-subject">${q.subject}</div>
         <div class="sr-topic">${q.topic}</div>
-        <div class="sr-prompt">Comment evalues-tu ton niveau sur ce chapitre ?</div>
-        <div class="sr-value-display" id="sr-value-display">5 <span>/ 10</span></div>
-        <div class="sr-description" id="sr-description" style="color:${desc.color}">${desc.text}</div>
+        <div class="sr-prompt">Avant de repondre, comment evalues-tu ton niveau sur ce chapitre ?</div>
+        <div class="sr-value-display" id="sr-value-display" style="color:${initColor}">5 <span>/ 10</span></div>
+        <div class="sr-description" id="sr-description" style="color:${initColor}">${desc.text}</div>
         <div class="sr-slider-container">
             <input type="range" class="sr-slider" id="sr-slider" min="0" max="10" value="5" step="1"
+                style="background:linear-gradient(to right, ${initColor} 0%, ${initColor} 50%, var(--gray-200) 50%, var(--gray-200) 100%)"
                 oninput="updateSelfRating(this.value)">
         </div>
         <div class="sr-labels">
