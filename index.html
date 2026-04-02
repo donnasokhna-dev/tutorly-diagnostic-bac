@@ -275,6 +275,86 @@
 
         .btn-restart { margin-top: 16px; }
 
+        /* Self-rating step */
+        .self-rate-card {
+            background: white; border-radius: var(--radius); padding: 28px;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1); animation: fadeIn 0.3s ease;
+            text-align: center;
+        }
+        .self-rate-card .sr-icon { font-size: 40px; margin-bottom: 12px; }
+        .self-rate-card .sr-subject {
+            font-size: 12px; font-weight: 700; text-transform: uppercase;
+            letter-spacing: 1px; color: var(--teal); margin-bottom: 4px;
+        }
+        .self-rate-card .sr-topic {
+            font-size: 22px; font-weight: 800; color: var(--primary); margin-bottom: 6px;
+            font-family: 'DM Serif Display', Georgia, serif;
+        }
+        .self-rate-card .sr-prompt {
+            font-size: 15px; color: var(--gray-500); margin-bottom: 24px; line-height: 1.5;
+        }
+        .sr-slider-container { padding: 0 10px; margin-bottom: 8px; }
+        .sr-slider {
+            -webkit-appearance: none; appearance: none; width: 100%; height: 10px;
+            border-radius: 5px; background: var(--gray-200); outline: none;
+            transition: background 0.2s;
+        }
+        .sr-slider::-webkit-slider-thumb {
+            -webkit-appearance: none; appearance: none; width: 32px; height: 32px;
+            border-radius: 50%; background: var(--accent); cursor: pointer;
+            border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+            transition: transform 0.15s;
+        }
+        .sr-slider::-webkit-slider-thumb:hover { transform: scale(1.15); }
+        .sr-slider::-moz-range-thumb {
+            width: 32px; height: 32px; border-radius: 50%; background: var(--accent);
+            cursor: pointer; border: 3px solid white; box-shadow: 0 2px 8px rgba(0,0,0,0.2);
+        }
+        .sr-value-display {
+            font-size: 48px; font-weight: 800; color: var(--primary);
+            margin: 8px 0; font-family: 'DM Serif Display', Georgia, serif;
+            transition: color 0.2s;
+        }
+        .sr-value-display span { font-size: 20px; color: var(--gray-500); font-weight: 400; }
+        .sr-labels {
+            display: flex; justify-content: space-between; font-size: 12px;
+            color: var(--gray-500); padding: 0 4px; margin-bottom: 20px;
+        }
+        .sr-description {
+            font-size: 14px; font-weight: 600; min-height: 22px;
+            margin-bottom: 20px; transition: color 0.2s;
+        }
+
+        /* Awareness results */
+        .awareness-section { margin-top: 16px; }
+        .awareness-section h3 {
+            font-size: 16px; margin-bottom: 12px; color: var(--primary);
+            padding-bottom: 8px; border-bottom: 1px solid var(--gray-200);
+        }
+        .awareness-item {
+            display: flex; align-items: center; gap: 12px;
+            padding: 12px 14px; border-radius: 10px; margin-bottom: 8px;
+            background: var(--gray-50); border: 1px solid var(--gray-200);
+        }
+        .awareness-item .aw-topic { font-weight: 600; font-size: 14px; flex: 1; }
+        .awareness-item .aw-self {
+            text-align: center; min-width: 55px;
+        }
+        .awareness-item .aw-real {
+            text-align: center; min-width: 55px;
+        }
+        .aw-label { font-size: 10px; color: var(--gray-500); text-transform: uppercase; letter-spacing: 0.5px; }
+        .aw-val { font-size: 18px; font-weight: 800; }
+        .aw-arrow { font-size: 18px; min-width: 30px; text-align: center; }
+        .aw-overestimate { color: var(--danger); }
+        .aw-accurate { color: var(--success); }
+        .aw-underestimate { color: var(--teal); }
+        .awareness-legend {
+            display: flex; gap: 16px; justify-content: center; margin-top: 12px;
+            font-size: 12px; flex-wrap: wrap;
+        }
+        .awareness-legend span { display: flex; align-items: center; gap: 4px; }
+
         @media (max-width: 500px) {
             .container { padding: 12px; }
             .welcome-card, .question-card, .results-card { padding: 20px; }
@@ -335,6 +415,7 @@
         <div class="progress-bar-container">
             <div class="progress-bar" id="progress-bar" style="width: 0%"></div>
         </div>
+        <div class="self-rate-card" id="self-rate-card" style="display:none;"></div>
         <div class="question-card" id="question-card"></div>
         <div class="quiz-nav">
             <button class="btn-nav btn-next" id="btn-next" onclick="handleNext()" disabled>Valider</button>
@@ -344,6 +425,7 @@
     <!-- Screen 3: Results -->
     <div id="screen-results" class="screen">
         <div class="results-card" id="results-overview"></div>
+        <div class="results-card" id="results-awareness"></div>
         <div class="results-card" id="results-subjects"></div>
         <div class="results-card" id="results-lacunes"></div>
         <button class="btn btn-primary btn-restart" onclick="restart()">Recommencer le diagnostic</button>
@@ -1099,6 +1181,9 @@ let state = {
     currentQuestion: null,
     questionNumber: 0,
     answered: false,
+    phase: 'rate', // 'rate' or 'quiz'
+    selfRating: 5,
+    selfRatings: [], // {topic, subject, rating, actualCorrect}
     timerInterval: null,
     timeLeft: 600,
     startTime: null
@@ -1121,6 +1206,7 @@ function startQuiz() {
     state.timeLeft = 600;
     state.startTime = Date.now();
     state.answered = false;
+    state.selfRatings = [];
 
     showScreen('screen-quiz');
     loadNextQuestion();
@@ -1130,8 +1216,11 @@ function startQuiz() {
 function loadNextQuestion() {
     state.questionNumber++;
     state.answered = false;
+    state.phase = 'rate';
+    state.selfRating = 5;
     state.currentQuestion = state.engine.getNextQuestion();
-    renderQuestion();
+    selectedOption = null;
+    showSelfRating();
     updateDifficultyIndicator();
 }
 
@@ -1173,7 +1262,6 @@ function updateDifficultyIndicator() {
     text.className = `difficulty-text ${diffClass}`;
     text.textContent = DIFFICULTY_LABELS[diff];
 
-    // Streak
     const streak = document.getElementById('streak-indicator');
     const cc = state.engine.consecutiveCorrect;
     if (cc >= 2) {
@@ -1183,6 +1271,77 @@ function updateDifficultyIndicator() {
     }
 }
 
+// ============================================================
+// SELF-RATING STEP
+// ============================================================
+function getSelfRatingDescription(val) {
+    if (val <= 2) return { text: "Je ne connais pas du tout ce chapitre", color: "var(--danger)" };
+    if (val <= 4) return { text: "J'ai des difficultes sur ce chapitre", color: "var(--accent)" };
+    if (val <= 6) return { text: "Je connais les bases mais pas plus", color: "var(--warning)" };
+    if (val <= 8) return { text: "Je maitrise assez bien ce chapitre", color: "var(--teal)" };
+    return { text: "Je maitrise parfaitement ce chapitre", color: "var(--success)" };
+}
+
+function showSelfRating() {
+    const q = state.currentQuestion;
+    const total = TOTAL_QUESTIONS;
+
+    document.getElementById('question-counter').textContent = `${state.questionNumber} / ${total}`;
+    document.getElementById('progress-bar').style.width = `${((state.questionNumber - 0.5) / total) * 100}%`;
+
+    const desc = getSelfRatingDescription(5);
+    const srCard = document.getElementById('self-rate-card');
+    srCard.style.display = 'block';
+    document.getElementById('question-card').style.display = 'none';
+
+    srCard.innerHTML = `
+        <div class="sr-icon">\uD83C\uDFAF</div>
+        <div class="sr-subject">${q.subject}</div>
+        <div class="sr-topic">${q.topic}</div>
+        <div class="sr-prompt">Comment evalues-tu ton niveau sur ce chapitre ?</div>
+        <div class="sr-value-display" id="sr-value-display">5 <span>/ 10</span></div>
+        <div class="sr-description" id="sr-description" style="color:${desc.color}">${desc.text}</div>
+        <div class="sr-slider-container">
+            <input type="range" class="sr-slider" id="sr-slider" min="0" max="10" value="5" step="1"
+                oninput="updateSelfRating(this.value)">
+        </div>
+        <div class="sr-labels">
+            <span>0 - Aucune notion</span>
+            <span>10 - Parfait</span>
+        </div>
+    `;
+
+    const btnNext = document.getElementById('btn-next');
+    btnNext.textContent = 'Passer a la question';
+    btnNext.disabled = false;
+    btnNext.classList.remove('btn-finish');
+    btnNext.onclick = confirmSelfRating;
+}
+
+function updateSelfRating(val) {
+    state.selfRating = parseInt(val);
+    const desc = getSelfRatingDescription(state.selfRating);
+    document.getElementById('sr-value-display').innerHTML = `${val} <span>/ 10</span>`;
+    document.getElementById('sr-value-display').style.color = desc.color;
+    document.getElementById('sr-description').textContent = desc.text;
+    document.getElementById('sr-description').style.color = desc.color;
+
+    // Update slider track color
+    const slider = document.getElementById('sr-slider');
+    const pct = (val / 10) * 100;
+    slider.style.background = `linear-gradient(to right, ${desc.color} 0%, ${desc.color} ${pct}%, var(--gray-200) ${pct}%, var(--gray-200) 100%)`;
+}
+
+function confirmSelfRating() {
+    state.phase = 'quiz';
+    document.getElementById('self-rate-card').style.display = 'none';
+    document.getElementById('question-card').style.display = 'block';
+    renderQuestion();
+}
+
+// ============================================================
+// QUIZ QUESTION STEP
+// ============================================================
 function renderQuestion() {
     const q = state.currentQuestion;
     const total = TOTAL_QUESTIONS;
@@ -1199,6 +1358,9 @@ function renderQuestion() {
             <span class="tag tag-subject">${q.subject}</span>
             <span class="tag tag-topic">${q.topic}</span>
             <span class="tag ${diffClass}">${diffLabel}</span>
+        </div>
+        <div style="font-size:12px; color:var(--gray-500); margin-bottom:12px;">
+            Tu t'es auto-evalue a <strong style="color:var(--accent)">${state.selfRating}/10</strong> sur ce chapitre. Verifions !
         </div>
         <div class="question-text">${q.question}</div>
         <div class="options" id="options-container">
@@ -1234,12 +1396,20 @@ function selectAnswer(idx) {
 
 function handleNext() {
     if (!state.answered && selectedOption !== null) {
-        // Validate answer
         state.answered = true;
         const q = state.currentQuestion;
         const isCorrect = state.engine.processAnswer(q, selectedOption);
 
-        // Show feedback
+        // Record self-rating vs reality
+        state.selfRatings.push({
+            topic: q.topic,
+            subject: q.subject,
+            rating: state.selfRating,
+            correct: isCorrect,
+            difficulty: q.difficulty
+        });
+
+        // Show feedback with self-rating comparison
         document.querySelectorAll('.option').forEach((el, i) => {
             el.classList.add('disabled');
             el.classList.remove('selected');
@@ -1247,14 +1417,20 @@ function handleNext() {
             if (i === selectedOption && !isCorrect) el.classList.add('incorrect');
         });
 
+        let awarenessNote = '';
+        if (isCorrect && state.selfRating <= 4) {
+            awarenessNote = '<br><em style="color:var(--teal)">Tu te sous-estimes sur ce chapitre ! Tu en sais plus que tu ne le penses.</em>';
+        } else if (!isCorrect && state.selfRating >= 7) {
+            awarenessNote = '<br><em style="color:var(--danger)">Attention : tu t\'es note ' + state.selfRating + '/10 mais la reponse etait fausse. Ce chapitre merite une revision.</em>';
+        }
+
         const feedbackHTML = isCorrect
-            ? `<div class="feedback-bar feedback-correct"><strong>Bonne reponse !</strong>${q.explanation}</div>`
-            : `<div class="feedback-bar feedback-incorrect"><strong>Mauvaise reponse</strong>${q.explanation}</div>`;
+            ? `<div class="feedback-bar feedback-correct"><strong>Bonne reponse !</strong>${q.explanation}${awarenessNote}</div>`
+            : `<div class="feedback-bar feedback-incorrect"><strong>Mauvaise reponse</strong>${q.explanation}${awarenessNote}</div>`;
         document.getElementById('feedback-container').innerHTML = feedbackHTML;
 
         updateDifficultyIndicator();
 
-        // Update button
         const btnNext = document.getElementById('btn-next');
         if (state.questionNumber >= TOTAL_QUESTIONS) {
             btnNext.textContent = 'Voir mes resultats';
@@ -1265,7 +1441,6 @@ function handleNext() {
         btnNext.disabled = false;
         selectedOption = null;
     } else if (state.answered) {
-        // Move to next question or finish
         if (state.questionNumber >= TOTAL_QUESTIONS) {
             finishQuiz();
         } else {
@@ -1401,6 +1576,73 @@ function renderResults(r, elapsed) {
         lacunesHTML = '<p style="text-align:center;color:var(--gray-500);">Niveau homogene sur les notions testees.</p>';
     }
     document.getElementById('results-lacunes').innerHTML = lacunesHTML;
+
+    // ====== AWARENESS ANALYSIS (auto-eval vs real) ======
+    const topicAwareness = {};
+    state.selfRatings.forEach(sr => {
+        const key = `${sr.subject}|${sr.topic}`;
+        if (!topicAwareness[key]) {
+            topicAwareness[key] = { subject: sr.subject, topic: sr.topic, ratings: [], corrects: 0, total: 0 };
+        }
+        topicAwareness[key].ratings.push(sr.rating);
+        topicAwareness[key].total++;
+        if (sr.correct) topicAwareness[key].corrects++;
+    });
+
+    let awHTML = '<div class="awareness-section">';
+    awHTML += '<h3>Auto-evaluation vs Niveau reel</h3>';
+    awHTML += '<p style="font-size:13px;color:var(--gray-500);margin-bottom:16px;">Comparaison entre la note que tu t\'es donnee et ton resultat reel au QCM.</p>';
+
+    // Header row
+    awHTML += `<div class="awareness-item" style="background:var(--primary-light);border-color:var(--primary-light);">
+        <span class="aw-topic" style="font-size:12px;text-transform:uppercase;letter-spacing:0.5px;">Chapitre</span>
+        <span class="aw-self"><span class="aw-label">Auto-note</span></span>
+        <span class="aw-arrow"></span>
+        <span class="aw-real"><span class="aw-label">Reel</span></span>
+    </div>`;
+
+    for (const [key, data] of Object.entries(topicAwareness)) {
+        const avgRating = Math.round(data.ratings.reduce((a, b) => a + b, 0) / data.ratings.length);
+        const realScore = Math.round((data.corrects / data.total) * 10);
+        const diff = avgRating - realScore;
+
+        let arrowIcon, arrowClass;
+        if (diff >= 3) {
+            arrowIcon = '\u2B07\uFE0F'; arrowClass = 'aw-overestimate'; // Overestimates a lot
+        } else if (diff <= -3) {
+            arrowIcon = '\u2B06\uFE0F'; arrowClass = 'aw-underestimate'; // Underestimates a lot
+        } else if (Math.abs(diff) <= 2) {
+            arrowIcon = '\u2705'; arrowClass = 'aw-accurate'; // Accurate
+        } else if (diff > 0) {
+            arrowIcon = '\u26A0\uFE0F'; arrowClass = 'aw-overestimate';
+        } else {
+            arrowIcon = '\uD83D\uDCA1'; arrowClass = 'aw-underestimate';
+        }
+
+        awHTML += `
+            <div class="awareness-item">
+                <span class="aw-topic">${data.topic}<br><span style="font-size:11px;color:var(--gray-500);font-weight:400;">${data.subject}</span></span>
+                <span class="aw-self">
+                    <span class="aw-val" style="color:var(--accent)">${avgRating}</span>
+                    <span class="aw-label">/10</span>
+                </span>
+                <span class="aw-arrow ${arrowClass}">${arrowIcon}</span>
+                <span class="aw-real">
+                    <span class="aw-val" style="color:${realScore >= 5 ? 'var(--success)' : 'var(--danger)'}">${realScore}</span>
+                    <span class="aw-label">/10</span>
+                </span>
+            </div>
+        `;
+    }
+
+    awHTML += `<div class="awareness-legend">
+        <span><span style="color:var(--danger)">\u26A0\uFE0F</span> Se surestime</span>
+        <span><span style="color:var(--success)">\u2705</span> Evaluation juste</span>
+        <span><span style="color:var(--teal)">\u2B06\uFE0F</span> Se sous-estime</span>
+    </div>`;
+    awHTML += '</div>';
+
+    document.getElementById('results-awareness').innerHTML = awHTML;
 }
 
 function showScreen(id) {
@@ -1410,7 +1652,7 @@ function showScreen(id) {
 
 function restart() {
     clearInterval(state.timerInterval);
-    state = { selectedSeries: null, engine: null, currentQuestion: null, questionNumber: 0, answered: false, timerInterval: null, timeLeft: 600, startTime: null };
+    state = { selectedSeries: null, engine: null, currentQuestion: null, questionNumber: 0, answered: false, phase: 'rate', selfRating: 5, selfRatings: [], timerInterval: null, timeLeft: 600, startTime: null };
     selectedOption = null;
     document.querySelectorAll('.series-card').forEach(c => c.classList.remove('selected'));
     document.getElementById('btn-start').disabled = true;
