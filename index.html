@@ -6,9 +6,15 @@
     <title>Tutorly - Diagnostic BAC Cote d'Ivoire</title>
     <style>
         :root {
-            --primary: #2563EB;
-            --primary-dark: #1D4ED8;
-            --primary-light: #DBEAFE;
+            /* Tutorly Brand Colors */
+            --primary: #1B3A5C;          /* Bleu marine - titres & textes */
+            --primary-dark: #122841;     /* Bleu marine fonce */
+            --primary-light: #E8EEF4;   /* Bleu marine tres clair */
+            --accent: #F58220;           /* Orange Tutorly - CTA & accents */
+            --accent-dark: #D96F10;      /* Orange fonce */
+            --accent-light: #FEF0E0;    /* Orange tres clair */
+            --teal: #1E8CA8;             /* Bleu teal - cartes secondaires */
+            --teal-light: #E2F3F7;       /* Teal tres clair */
             --success: #059669;
             --success-light: #D1FAE5;
             --warning: #D97706;
@@ -21,12 +27,13 @@
             --gray-300: #D1D5DB;
             --gray-500: #6B7280;
             --gray-700: #374151;
-            --gray-900: #111827;
+            --gray-900: #1B3A5C;
             --radius: 12px;
         }
+        @import url('https://fonts.googleapis.com/css2?family=DM+Serif+Display&family=Inter:wght@400;500;600;700;800&display=swap');
         * { margin: 0; padding: 0; box-sizing: border-box; }
         body {
-            font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+            font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
             background: var(--gray-50);
             color: var(--gray-900);
             min-height: 100vh;
@@ -34,7 +41,24 @@
         .container { max-width: 720px; margin: 0 auto; padding: 20px; }
 
         .header { text-align: center; padding: 24px 0; }
-        .header .logo { font-size: 28px; font-weight: 800; color: var(--primary); letter-spacing: -0.5px; }
+        .header .logo {
+            font-family: 'DM Serif Display', Georgia, serif;
+            font-size: 32px; font-weight: 400; color: var(--primary);
+            letter-spacing: 2px; text-transform: uppercase;
+        }
+        .header .logo-icon {
+            display: inline-block; width: 28px; height: 28px; margin-right: 6px;
+            background: var(--accent); border-radius: 50%; position: relative; vertical-align: middle;
+        }
+        .header .logo-icon::before {
+            content: ''; position: absolute; top: 50%; left: 50%; transform: translate(-50%,-50%);
+            width: 10px; height: 10px; background: white; border-radius: 50%;
+        }
+        .header .logo-icon::after {
+            content: ''; position: absolute; top: 1px; left: 50%; transform: translateX(-50%);
+            width: 2px; height: 6px; background: white; border-radius: 1px;
+            box-shadow: 0 21px 0 white, 10px 10px 0 white, -10px 10px 0 white, 7px -2px 0 white, -7px -2px 0 white;
+        }
         .header .subtitle { color: var(--gray-500); font-size: 14px; margin-top: 4px; }
 
         .screen { display: none; }
@@ -50,18 +74,18 @@
         .info-badges { display: flex; justify-content: center; gap: 12px; margin-bottom: 28px; flex-wrap: wrap; }
         .badge {
             display: inline-flex; align-items: center; gap: 6px;
-            background: var(--primary-light); color: var(--primary);
+            background: var(--teal-light); color: var(--teal);
             padding: 6px 14px; border-radius: 20px; font-size: 13px; font-weight: 600;
         }
-        .badge-adaptive { background: #F3E8FF; color: #7C3AED; }
+        .badge-adaptive { background: var(--accent-light); color: var(--accent); }
 
         .series-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 12px; margin-bottom: 24px; }
         .series-card {
             background: white; border: 2px solid var(--gray-200); border-radius: var(--radius);
             padding: 20px 12px; text-align: center; cursor: pointer; transition: all 0.2s;
         }
-        .series-card:hover, .series-card.selected { border-color: var(--primary); background: var(--primary-light); }
-        .series-card .series-letter { font-size: 32px; font-weight: 800; color: var(--primary); }
+        .series-card:hover, .series-card.selected { border-color: var(--accent); background: var(--accent-light); }
+        .series-card .series-letter { font-size: 32px; font-weight: 800; color: var(--primary); font-family: 'DM Serif Display', Georgia, serif; }
         .series-card .series-desc { font-size: 11px; color: var(--gray-500); margin-top: 4px; line-height: 1.4; }
 
         .btn {
@@ -69,8 +93,8 @@
             padding: 14px 32px; border: none; border-radius: var(--radius);
             font-size: 16px; font-weight: 600; cursor: pointer; transition: all 0.2s; width: 100%;
         }
-        .btn-primary { background: var(--primary); color: white; }
-        .btn-primary:hover { background: var(--primary-dark); }
+        .btn-primary { background: var(--accent); color: white; }
+        .btn-primary:hover { background: var(--accent-dark); }
         .btn-primary:disabled { background: var(--gray-300); cursor: not-allowed; }
 
         /* Quiz */
@@ -79,7 +103,7 @@
             margin-bottom: 12px; padding: 12px 16px;
             background: white; border-radius: var(--radius); box-shadow: 0 1px 3px rgba(0,0,0,0.1);
         }
-        .timer { font-size: 18px; font-weight: 700; color: var(--primary); font-variant-numeric: tabular-nums; }
+        .timer { font-size: 18px; font-weight: 700; color: var(--teal); font-variant-numeric: tabular-nums; }
         .timer.warning { color: var(--warning); }
         .timer.danger { color: var(--danger); }
         .progress-text { font-size: 14px; color: var(--gray-500); font-weight: 600; }
@@ -96,12 +120,12 @@
             width: 10px; height: 10px; border-radius: 50%;
             background: var(--gray-200); transition: background 0.3s;
         }
-        .difficulty-dot.active-easy { background: var(--success); }
-        .difficulty-dot.active-medium { background: var(--warning); }
+        .difficulty-dot.active-easy { background: var(--teal); }
+        .difficulty-dot.active-medium { background: var(--accent); }
         .difficulty-dot.active-hard { background: var(--danger); }
         .difficulty-text { font-weight: 700; margin-left: auto; }
-        .diff-easy { color: var(--success); }
-        .diff-medium { color: var(--warning); }
+        .diff-easy { color: var(--teal); }
+        .diff-medium { color: var(--accent); }
         .diff-hard { color: var(--danger); }
 
         .streak-indicator {
@@ -115,7 +139,7 @@
             margin-bottom: 20px; overflow: hidden;
         }
         .progress-bar {
-            height: 100%; background: var(--primary); border-radius: 3px; transition: width 0.3s ease;
+            height: 100%; background: var(--accent); border-radius: 3px; transition: width 0.3s ease;
         }
 
         .question-card {
@@ -129,10 +153,10 @@
             font-size: 11px; padding: 3px 10px; border-radius: 12px;
             font-weight: 600; text-transform: uppercase; letter-spacing: 0.5px;
         }
-        .tag-subject { background: var(--primary-light); color: var(--primary); }
+        .tag-subject { background: var(--teal-light); color: var(--teal); }
         .tag-topic { background: var(--gray-100); color: var(--gray-700); }
-        .tag-easy { background: var(--success-light); color: var(--success); }
-        .tag-medium { background: var(--warning-light); color: var(--warning); }
+        .tag-easy { background: var(--teal-light); color: var(--teal); }
+        .tag-medium { background: var(--accent-light); color: var(--accent); }
         .tag-hard { background: var(--danger-light); color: var(--danger); }
 
         .question-text { font-size: 17px; font-weight: 600; line-height: 1.5; margin-bottom: 20px; }
@@ -143,8 +167,8 @@
             padding: 14px 16px; border: 2px solid var(--gray-200); border-radius: 10px;
             cursor: pointer; transition: all 0.15s; font-size: 15px; line-height: 1.5;
         }
-        .option:hover { border-color: var(--primary); background: var(--primary-light); }
-        .option.selected { border-color: var(--primary); background: var(--primary-light); }
+        .option:hover { border-color: var(--teal); background: var(--teal-light); }
+        .option.selected { border-color: var(--accent); background: var(--accent-light); }
         .option.correct { border-color: var(--success); background: var(--success-light); }
         .option.incorrect { border-color: var(--danger); background: var(--danger-light); }
         .option.disabled { pointer-events: none; }
@@ -154,7 +178,7 @@
             background: var(--gray-100); font-weight: 700; font-size: 13px;
             color: var(--gray-700); flex-shrink: 0;
         }
-        .option.selected .option-letter { background: var(--primary); color: white; }
+        .option.selected .option-letter { background: var(--accent); color: white; }
         .option.correct .option-letter { background: var(--success); color: white; }
         .option.incorrect .option-letter { background: var(--danger); color: white; }
 
@@ -172,11 +196,11 @@
             background: white; font-size: 14px; font-weight: 600; cursor: pointer;
             transition: all 0.2s; color: var(--gray-700);
         }
-        .btn-nav:hover { border-color: var(--primary); color: var(--primary); }
+        .btn-nav:hover { border-color: var(--accent); color: var(--accent); }
         .btn-next {
-            background: var(--primary); color: white; border-color: var(--primary); flex: 1; max-width: 300px;
+            background: var(--accent); color: white; border-color: var(--accent); flex: 1; max-width: 300px;
         }
-        .btn-next:hover { background: var(--primary-dark); }
+        .btn-next:hover { background: var(--accent-dark); }
         .btn-next:disabled { background: var(--gray-300); border-color: var(--gray-300); cursor: not-allowed; }
         .btn-finish { background: var(--success); border-color: var(--success); }
         .btn-finish:hover { background: #047857; }
@@ -194,8 +218,8 @@
         .score-circle .score-value { font-size: 36px; font-weight: 800; }
         .score-circle .score-label { font-size: 13px; font-weight: 600; }
         .score-excellent { border-color: var(--success); color: var(--success); }
-        .score-good { border-color: var(--primary); color: var(--primary); }
-        .score-average { border-color: var(--warning); color: var(--warning); }
+        .score-good { border-color: var(--teal); color: var(--teal); }
+        .score-average { border-color: var(--accent); color: var(--accent); }
         .score-weak { border-color: var(--danger); color: var(--danger); }
 
         .level-text { text-align: center; font-size: 20px; font-weight: 700; margin-bottom: 4px; }
@@ -243,11 +267,11 @@
         .lacune-icon { flex-shrink: 0; font-size: 16px; }
 
         .adaptive-summary {
-            margin-top: 20px; padding: 16px; background: #F3E8FF;
-            border-radius: 10px; border: 1px solid #DDD6FE;
+            margin-top: 20px; padding: 16px; background: var(--primary-light);
+            border-radius: 10px; border: 1px solid #C5D3E3;
         }
-        .adaptive-summary h4 { color: #7C3AED; font-size: 14px; margin-bottom: 8px; }
-        .adaptive-summary p { font-size: 13px; color: #5B21B6; line-height: 1.6; }
+        .adaptive-summary h4 { color: var(--primary); font-size: 14px; margin-bottom: 8px; }
+        .adaptive-summary p { font-size: 13px; color: var(--primary); line-height: 1.6; }
 
         .btn-restart { margin-top: 16px; }
 
@@ -263,7 +287,7 @@
 
 <div class="container">
     <div class="header">
-        <div class="logo">Tutorly</div>
+        <div class="logo"><span class="logo-icon"></span>Tutorly</div>
         <div class="subtitle">Diagnostic adaptatif - BAC Cote d'Ivoire</div>
     </div>
 
@@ -1272,7 +1296,7 @@ function renderResults(r, elapsed) {
         level = "Bon niveau"; levelDesc = "Base solide avec quelques points a renforcer.";
         scoreClass = "score-good"; estimatedBAC = "10-14/20";
     } else if (ns >= 35) {
-        level = "Niveau moyen"; levelDesc = "Des lacunes significatives a combler avant le BAC.";
+        level = "Niveau moyen"; levelDesc = "Des lacunes a combler. Un tuteur Tutorly peut t'aider !";
         scoreClass = "score-average"; estimatedBAC = "7-10/20";
     } else {
         level = "Niveau insuffisant"; levelDesc = "Un accompagnement intensif est fortement recommande.";
@@ -1290,11 +1314,11 @@ function renderResults(r, elapsed) {
         <div class="level-desc">${levelDesc}</div>
         <div class="estimated-level">
             <div class="el-label">Niveau estime au BAC</div>
-            <div class="el-value" style="color:${scoreClass === 'score-excellent' ? 'var(--success)' : scoreClass === 'score-good' ? 'var(--primary)' : scoreClass === 'score-average' ? 'var(--warning)' : 'var(--danger)'}">${estimatedBAC}</div>
+            <div class="el-value" style="color:${scoreClass === 'score-excellent' ? 'var(--success)' : scoreClass === 'score-good' ? 'var(--teal)' : scoreClass === 'score-average' ? 'var(--accent)' : 'var(--danger)'}">${estimatedBAC}</div>
             <div class="el-gauge">
                 ${[1,2,3,4,5].map(i => {
                     const filled = i <= Math.ceil(ns / 20);
-                    const color = ns >= 75 ? 'var(--success)' : ns >= 55 ? 'var(--primary)' : ns >= 35 ? 'var(--warning)' : 'var(--danger)';
+                    const color = ns >= 75 ? 'var(--success)' : ns >= 55 ? 'var(--teal)' : ns >= 35 ? 'var(--accent)' : 'var(--danger)';
                     return `<div class="el-gauge-seg" style="${filled ? 'background:'+color : ''}"></div>`;
                 }).join('')}
             </div>
